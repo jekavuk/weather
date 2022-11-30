@@ -1,0 +1,43 @@
+{
+    "coord": {
+        "lon": 20.4651,
+        "lat": 44.804
+    },
+    "weather": [
+        {
+            "id": 800,
+            "main": "Clear",
+            "description": "clear sky",
+            "icon": "01n"
+        }
+    ],
+    "base": "stations",
+    "main": {
+        "temp": 280.3,
+        "feels_like": 278.97,
+        "temp_min": 279.5,
+        "temp_max": 280.96,
+        "pressure": 1019,
+        "humidity": 83
+    },
+    "visibility": 10000,
+    "wind": {
+        "speed": 2.06,
+        "deg": 20
+    },
+    "clouds": {
+        "all": 0
+    },
+    "dt": 1669390422,
+    "sys": {
+        "type": 2,
+        "id": 2037836,
+        "country": "RS",
+        "sunrise": 1669355290,
+        "sunset": 1669388541
+    },
+    "timezone": 3600,
+    "id": 792680,
+    "name": "Belgrade",
+    "cod": 200
+}
