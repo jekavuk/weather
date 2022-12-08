@@ -30,7 +30,7 @@ func TestParseResponse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want != got {
+	if want != got.Weather[0].Main {
 		t.Error(cmp.Diff(want, got))
 	}
 }

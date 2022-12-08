@@ -5,14 +5,24 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"weatherclient"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
 
-	l := "London"
-	key := "dummyKey"
-	url := weatherclient.FormatURL(l, key)
+	args := os.Args
+
+	err := godotenv.Load("config.env")
+	if err != nil {
+		log.Fatalf("loading .env: %s", err)
+	}
+
+	location := args[1]
+	key := os.Getenv("API_KEY")
+	url := weatherclient.FormatURL(location, key)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -35,5 +45,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(conditions)
+	fmt.Printf("%+v", conditions)
 }
