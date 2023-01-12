@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"log"
@@ -12,15 +13,49 @@ import (
 )
 
 func main() {
-
-	args := os.Args
+	scanner := bufio.NewScanner(os.Stdin)
 
 	err := godotenv.Load("config.env")
 	if err != nil {
-		log.Fatalf("loading .env: %s", err)
+		log.Printf("config file missing: %s", err)
+		// API key
+		for {
+			fmt.Print("Please enter youre API key: ")
+			scanner.Scan()
+			text := scanner.Text()
+
+			if len(text) == 0 {
+				fmt.Println("API key must be provided")
+				continue
+			} else {
+				os.Setenv("API_KEY", text)
+				break
+			}
+		}
 	}
 
-	location := args[1]
+	var location string
+	if os.Args != nil && len(os.Args) > 1 {
+		location = os.Args[1]
+	}
+
+	if location == "" {
+		// location
+		for {
+			fmt.Print("Please enter location: ")
+			scanner.Scan()
+			text := scanner.Text()
+
+			if len(text) == 0 {
+				fmt.Println("Location must be provided")
+				continue
+			} else {
+				location = text
+				break
+			}
+		}
+	}
+
 	key := os.Getenv("API_KEY")
 	url := weatherclient.FormatURL(location, key)
 
