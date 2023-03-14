@@ -1,4 +1,4 @@
-package weatherclient
+package weather
 
 import (
 	"encoding/json"
@@ -11,50 +11,25 @@ import (
 const APIKeyName = "OPEN_WEATHER_MAP_API_KEY"
 
 type WeatherClient struct {
-	URL string
+	APIKey, BaseURL string
+	HTTPClient      *http.Client
 }
 
-type APIResponse struct {
-	Weather []struct {
-		Main string
-	}
-	Main struct {
-		Temp      float64
-		FeelsLike float64
-		Pressure  int
-		Humidity  int
+func NewClient(apiKey string) WeatherClient {
+	return WeatherClient{
+		APIKey:     apiKey,
+		BaseURL:    "https://api.openweathermap.org/data/2.5/weather",
+		HTTPClient: http.DefaultClient,
 	}
 }
 
-func NewWeatherClient(apiKey, location string) WeatherClient {
-	url := FormatURL(location, apiKey)
-	return WeatherClient{URL: url}
+func (wc WeatherClient) FormatURL(location string) string {
+	return fmt.Sprintf("%s?q=%s&appid=%s", wc.BaseURL, location, wc.APIKey)
 }
 
-func FormatURL(location string, apiKey string) string {
-	return fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s", location, apiKey)
-}
-
-func ParseResponse(data []byte) (string, error) {
-	var apiResp APIResponse
-	err := json.Unmarshal(data, &apiResp)
-	if err != nil {
-		return "", err
-	}
-	tempC := apiResp.Main.Temp - 273.5
-	return fmt.Sprintf("%s %.1fºC", apiResp.Weather[0].Main, tempC), nil
-}
-
-func GetAPIKey() (string, error) {
-	key := os.Getenv(APIKeyName)
-	if key == "" {
-		return "", fmt.Errorf("please set env var %s to a value of your API key", APIKeyName)
-	}
-	return key, nil
-}
-
-func (wc WeatherClient) GetWeather() (string, error) {
-	resp, err := http.Get(wc.URL)
+func (wc WeatherClient) GetWeather(location string) (string, error) {
+	URL := wc.FormatURL(location)
+	resp, err := wc.HTTPClient.Get(URL)
 	if err != nil {
 		return "", err
 	}
@@ -76,4 +51,32 @@ func (wc WeatherClient) GetWeather() (string, error) {
 	}
 
 	return conditions, nil
+}
+
+func ParseResponse(data []byte) (string, error) {
+	var apiResp struct {
+		Weather []struct {
+			Main string
+		}
+		Main struct {
+			Temp float64
+		}
+	}
+	err := json.Unmarshal(data, &apiResp)
+	if err != nil {
+		return "", err
+	}
+	if len(apiResp.Weather) < 1 {
+		return "", fmt.Errorf("invalid weather data: %q", data)
+	}
+	tempC := apiResp.Main.Temp - 273.5
+	return fmt.Sprintf("%s %.1fºC", apiResp.Weather[0].Main, tempC), nil
+}
+
+func GetAPIKey() (string, error) {
+	key := os.Getenv(APIKeyName)
+	if key == "" {
+		return "", fmt.Errorf("please set env var %s to a value of your API key", APIKeyName)
+	}
+	return key, nil
 }

@@ -1,4 +1,4 @@
-module weatherclient
+module github.com/jekvuk/weather
 
 go 1.18
 
