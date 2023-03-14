@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"weatherclient"
+	wc "weatherclient"
 )
 
 func main() {
@@ -16,12 +16,14 @@ func main() {
 		log.Fatal("please provide valid location")
 	}
 
-	key, err := weatherclient.GetAPIKey()
+	key, err := wc.GetAPIKey()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	conditions, err := weatherclient.GetWeather(location, key)
+	weClient := wc.NewWeatherClient(key, location)
+
+	conditions, err := weClient.GetWeather()
 	if err != nil {
 		log.Fatal(err)
 	}

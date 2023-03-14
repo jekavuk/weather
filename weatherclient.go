@@ -10,6 +10,10 @@ import (
 
 const APIKeyName = "OPEN_WEATHER_MAP_API_KEY"
 
+type WeatherClient struct {
+	URL string
+}
+
 type APIResponse struct {
 	Weather []struct {
 		Main string
@@ -20,6 +24,11 @@ type APIResponse struct {
 		Pressure  int
 		Humidity  int
 	}
+}
+
+func NewWeatherClient(apiKey, location string) WeatherClient {
+	url := FormatURL(location, apiKey)
+	return WeatherClient{URL: url}
 }
 
 func FormatURL(location string, apiKey string) string {
@@ -44,10 +53,8 @@ func GetAPIKey() (string, error) {
 	return key, nil
 }
 
-func GetWeather(location string, key string) (string, error) {
-	url := FormatURL(location, key)
-
-	resp, err := http.Get(url)
+func (wc WeatherClient) GetWeather() (string, error) {
+	resp, err := http.Get(wc.URL)
 	if err != nil {
 		return "", err
 	}
