@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 )
 
 const APIKeyName = "OPEN_WEATHER_MAP_API_KEY"
 
 type WeatherClient struct {
-	APIKey, BaseURL string
-	HTTPClient      *http.Client
+	APIKey, BaseURL, TemperatureScale string
+	HTTPClient                        *http.Client
 }
 
 func NewClient(apiKey string) WeatherClient {
@@ -23,8 +24,13 @@ func NewClient(apiKey string) WeatherClient {
 	}
 }
 
+func (wc WeatherClient) FormatLocation(location string) string {
+	return url.PathEscape(location)
+}
+
 func (wc WeatherClient) FormatURL(location string) string {
-	return fmt.Sprintf("%s?q=%s&appid=%s", wc.BaseURL, location, wc.APIKey)
+	l := wc.FormatLocation(location)
+	return fmt.Sprintf("%s?q=%s&appid=%s", wc.BaseURL, l, wc.APIKey)
 }
 
 func (wc WeatherClient) GetWeather(location string) (string, error) {
@@ -45,7 +51,7 @@ func (wc WeatherClient) GetWeather(location string) (string, error) {
 		return "", err
 	}
 
-	conditions, err := ParseResponse(data)
+	conditions, err := ParseResponse(data, wc.TemperatureScale)
 	if err != nil {
 		return "", err
 	}
@@ -53,7 +59,7 @@ func (wc WeatherClient) GetWeather(location string) (string, error) {
 	return conditions, nil
 }
 
-func ParseResponse(data []byte) (string, error) {
+func ParseResponse(data []byte, temperatureScale string) (string, error) {
 	var apiResp struct {
 		Weather []struct {
 			Main string
@@ -61,6 +67,7 @@ func ParseResponse(data []byte) (string, error) {
 		Main struct {
 			Temp float64
 		}
+		Name string
 	}
 	err := json.Unmarshal(data, &apiResp)
 	if err != nil {
@@ -69,8 +76,20 @@ func ParseResponse(data []byte) (string, error) {
 	if len(apiResp.Weather) < 1 {
 		return "", fmt.Errorf("invalid weather data: %q", data)
 	}
-	tempC := apiResp.Main.Temp - 273.5
-	return fmt.Sprintf("%s %.1fºC", apiResp.Weather[0].Main, tempC), nil
+	var tempC float64
+	var tempSymbol string
+	switch temperatureScale {
+	case "celsius":
+		tempC = apiResp.Main.Temp - 273.5
+		tempSymbol = "ºC"
+	case "fahrenheit":
+		tempC = 1.8*(apiResp.Main.Temp-273.15) + 32
+		tempSymbol = "ºF"
+	default:
+		tempC = apiResp.Main.Temp
+		tempSymbol = "K"
+	}
+	return fmt.Sprintf("Current wether for %s: %s %.1f%s", apiResp.Name, apiResp.Weather[0].Main, tempC, tempSymbol), nil
 }
 
 func GetAPIKey() (string, error) {

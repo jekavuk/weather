@@ -23,6 +23,15 @@ func TestFormatURL_ReturnsCorrectURLForProvidedLocationAndAPIKey(t *testing.T) {
 	}
 }
 
+func TestFormatLocation_EscapesSpaces(t *testing.T) {
+	wc := weather.NewClient("dummyKey")
+	want := "New%20York%20City"
+	got := wc.FormatLocation("New York City")
+	if want != got {
+		t.Errorf("\nwant %q\ngot  %q", want, got)
+	}
+}
+
 func TestFormatURL_EscapesSpacesInLocation(t *testing.T) {
 	wc := weather.NewClient("dummyKey")
 	want := "https://api.openweathermap.org/data/2.5/weather?q=New%20York%20City&appid=dummyKey"
@@ -42,32 +51,41 @@ func TestFormatURL_HonoursBaseURLSetting(t *testing.T) {
 	}
 }
 
-func TestParseResponse_CorrectlyParsesResponseIntoString(t *testing.T) {
-	want := "Clear 6.8ºC"
+func TestParseResponse_CorrectlyParsesResponseIntoStringWithScaleOptions(t *testing.T) {
+	testData := []struct {
+		option string
+		want   string
+	}{
+		{option: "fahrenheit", want: "Current wether for Belgrade: Clear 44.9ºF"},
+		{option: "celsius", want: "Current wether for Belgrade: Clear 6.8ºC"},
+		{option: "", want: "Current wether for Belgrade: Clear 280.3K"},
+	}
 	var data []byte
 	data, err := os.ReadFile("testdata/bgwether.json")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	got, err := weather.ParseResponse(data)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if want != got {
-		t.Error(cmp.Diff(want, got))
+	for _, td := range testData {
+		got, err := weather.ParseResponse(data, td.option)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if td.want != got {
+			t.Error(cmp.Diff(td.want, got))
+		}
 	}
 }
 
 func TestParseResponse_ReturnsErrorForInvalidJSON(t *testing.T) {
-	_, err := weather.ParseResponse([]byte{})
+	_, err := weather.ParseResponse([]byte{}, "")
 	if err == nil {
 		t.Fatal("wanted error for invalid data and got nil")
 	}
 }
 
 func TestParseResponse_ReturnsErrorForValidJSONExpressingInvalidData(t *testing.T) {
-	_, err := weather.ParseResponse([]byte(`{"bogus":"data"}`))
+	_, err := weather.ParseResponse([]byte(`{"bogus":"data"}`), "")
 	if err == nil {
 		t.Fatal("wanted error for invalid weather data and got nil")
 	}
@@ -110,7 +128,8 @@ func TestGetWeather_CorrectlyReturnsWeatherInfo(t *testing.T) {
 	client := weather.NewClient("dummyKey")
 	client.BaseURL = ts.URL
 	client.HTTPClient = ts.Client()
-	want := "Clear 6.8ºC"
+	client.TemperatureScale = "celsius"
+	want := "Current wether for Belgrade: Clear 6.8ºC"
 	got, err := client.GetWeather("dummyLocation")
 	if err != nil {
 		t.Fatal(err)
