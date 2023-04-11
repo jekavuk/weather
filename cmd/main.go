@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/jekvuk/weather"
@@ -14,10 +13,9 @@ import (
 var temperatureScale = flag.String("scale", "", "port number")
 
 func main() {
-	var locationArgs []string
-	if os.Args != nil && len(os.Args) > 2 {
-		locationArgs = append(locationArgs, os.Args[2:]...)
-	}
+	flag.Parse()
+
+	locationArgs := flag.Args()
 	if len(locationArgs) < 1 {
 		log.Fatal("please provide valid location")
 	}
@@ -26,8 +24,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	flag.Parse()
 
 	weClient := weather.NewClient(key)
 	weClient.TemperatureScale = *temperatureScale

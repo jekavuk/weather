@@ -89,7 +89,9 @@ func ParseResponse(data []byte, temperatureScale string) (string, error) {
 		tempC = apiResp.Main.Temp
 		tempSymbol = "K"
 	}
-	return fmt.Sprintf("Current wether for %s: %s %.1f%s", apiResp.Name, apiResp.Weather[0].Main, tempC, tempSymbol), nil
+
+	resp := response{city: apiResp.Name, feel: apiResp.Weather[0].Main, temp: tempC, scale: tempSymbol}
+	return resp.String(), nil
 }
 
 func GetAPIKey() (string, error) {
