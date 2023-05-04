@@ -23,7 +23,14 @@ if err != nil {
 ```
 You will need to replace API_KEY with your own API key from OpenWeatherMap. You can sign up for an API key for free at https://openweathermap.org/api.
 
-(TBD - add info oabout scale pick feature)
+## Frstures
+There is a feature option to display current temperature as Celsius, Fahrenheit or default(Kelvin).
+To try it out provide option parameter *scale* when running the tool for example provide option like:
+```
+--scale=celsius
+```
+Possible values are lower case strings (celsius or fahrenheit). If this option is not set, temperature will be displayed for default temperature scale.
+If you are using library package set this option on weather client (in the same maner).
 
-# License (TBD)
+# License
 This project is licensed under the MIT License - see the LICENSE.md file for details.
