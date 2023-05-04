@@ -1,5 +1,5 @@
 # Description
-`weather` is a simple Go library package with accompanying command-line tool. It provides a short information about current weather conditions for a given location using the OpenWeatherMap API.
+`weather` is a simple Go library package with accompanying command-line tool. It provides a short information about current weather conditions for a given location using the [OpenWeatherMap API](https://openweathermap.org/api).
 
 # Installation
 If you wish install it using go get:
