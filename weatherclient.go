@@ -12,8 +12,8 @@ import (
 const APIKeyName = "OPEN_WEATHER_MAP_API_KEY"
 
 type WeatherClient struct {
-	APIKey, BaseURL, TemperatureScale string
-	HTTPClient                        *http.Client
+	APIKey, BaseURL string
+	HTTPClient      *http.Client
 }
 
 func NewClient(apiKey string) WeatherClient {
@@ -33,33 +33,33 @@ func (wc WeatherClient) FormatURL(location string) string {
 	return fmt.Sprintf("%s?q=%s&appid=%s", wc.BaseURL, l, wc.APIKey)
 }
 
-func (wc WeatherClient) GetWeather(location string) (string, error) {
+func (wc WeatherClient) GetWeather(location string) (Conditions, error) {
 	URL := wc.FormatURL(location)
 	resp, err := wc.HTTPClient.Get(URL)
 	if err != nil {
-		return "", err
+		return Conditions{}, err
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("unexpected response status: %s", resp.Status)
+		return Conditions{}, fmt.Errorf("unexpected response status: %s", resp.Status)
 	}
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return Conditions{}, err
 	}
 
-	conditions, err := ParseResponse(data, wc.TemperatureScale)
+	conditions, err := ParseResponse(data)
 	if err != nil {
-		return "", err
+		return Conditions{}, err
 	}
 
 	return conditions, nil
 }
 
-func ParseResponse(data []byte, temperatureScale string) (string, error) {
+func ParseResponse(data []byte) (Conditions, error) {
 	var apiResp struct {
 		Weather []struct {
 			Main string
@@ -71,27 +71,14 @@ func ParseResponse(data []byte, temperatureScale string) (string, error) {
 	}
 	err := json.Unmarshal(data, &apiResp)
 	if err != nil {
-		return "", err
+		return Conditions{}, err
 	}
 	if len(apiResp.Weather) < 1 {
-		return "", fmt.Errorf("invalid weather data: %q", data)
-	}
-	var tempC float64
-	var tempSymbol string
-	switch temperatureScale {
-	case "celsius":
-		tempC = apiResp.Main.Temp - 273.5
-		tempSymbol = "ºC"
-	case "fahrenheit":
-		tempC = 1.8*(apiResp.Main.Temp-273.15) + 32
-		tempSymbol = "ºF"
-	default:
-		tempC = apiResp.Main.Temp
-		tempSymbol = "K"
+		return Conditions{}, fmt.Errorf("invalid weather data: %q", data)
 	}
 
-	resp := response{city: apiResp.Name, feel: apiResp.Weather[0].Main, temp: tempC, scale: tempSymbol}
-	return resp.String(), nil
+	resp := Conditions{City: apiResp.Name, Feel: apiResp.Weather[0].Main, TempK: apiResp.Main.Temp}
+	return resp, nil
 }
 
 func GetAPIKey() (string, error) {

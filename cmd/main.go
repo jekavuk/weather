@@ -26,7 +26,6 @@ func main() {
 	}
 
 	weClient := weather.NewClient(key)
-	weClient.TemperatureScale = *temperatureScale
 
 	location := strings.Join(locationArgs, " ")
 	conditions, err := weClient.GetWeather(location)
@@ -34,5 +33,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("%+v", conditions)
+	switch *temperatureScale {
+	default:
+		fmt.Println(conditions.StringCelsius())
+	case "fahrenheit":
+		fmt.Println(conditions.StringFahrenheit())
+	}
 }

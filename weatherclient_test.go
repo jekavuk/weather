@@ -51,41 +51,32 @@ func TestFormatURL_HonoursBaseURLSetting(t *testing.T) {
 	}
 }
 
-func TestParseResponse_CorrectlyParsesResponseIntoStringWithScaleOptions(t *testing.T) {
-	testData := []struct {
-		option string
-		want   string
-	}{
-		{option: "fahrenheit", want: "Current wether for Belgrade: Clear 44.9ºF"},
-		{option: "celsius", want: "Current wether for Belgrade: Clear 6.8ºC"},
-		{option: "", want: "Current wether for Belgrade: Clear 280.3K"},
-	}
+func TestParseResponse_CorrectlyParsesResponseToConditions(t *testing.T) {
+	want := weather.Conditions{City: "Belgrade", Feel: "Clear", TempK: 280.3}
 	var data []byte
 	data, err := os.ReadFile("testdata/bgwether.json")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	for _, td := range testData {
-		got, err := weather.ParseResponse(data, td.option)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if td.want != got {
-			t.Error(cmp.Diff(td.want, got))
-		}
+	got, err := weather.ParseResponse(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
 	}
 }
 
 func TestParseResponse_ReturnsErrorForInvalidJSON(t *testing.T) {
-	_, err := weather.ParseResponse([]byte{}, "")
+	_, err := weather.ParseResponse([]byte{})
 	if err == nil {
 		t.Fatal("wanted error for invalid data and got nil")
 	}
 }
 
 func TestParseResponse_ReturnsErrorForValidJSONExpressingInvalidData(t *testing.T) {
-	_, err := weather.ParseResponse([]byte(`{"bogus":"data"}`), "")
+	_, err := weather.ParseResponse([]byte(`{"bogus":"data"}`))
 	if err == nil {
 		t.Fatal("wanted error for invalid weather data and got nil")
 	}
@@ -128,12 +119,41 @@ func TestGetWeather_CorrectlyReturnsWeatherInfo(t *testing.T) {
 	client := weather.NewClient("dummyKey")
 	client.BaseURL = ts.URL
 	client.HTTPClient = ts.Client()
-	client.TemperatureScale = "celsius"
-	want := "Current wether for Belgrade: Clear 6.8ºC"
+	want := weather.Conditions{City: "Belgrade", Feel: "Clear", TempK: 280.3}
 	got, err := client.GetWeather("dummyLocation")
 	if err != nil {
 		t.Fatal(err)
 	}
+	if !cmp.Equal(want, got) {
+		t.Fatal(cmp.Diff(want, got))
+	}
+}
+
+func TestConditionsString_CorrectlyFormatsConditions(t *testing.T) {
+	want := "Current wether for Belgrade: Clear 280.3K"
+	inConditions := weather.Conditions{City: "Belgrade", Feel: "Clear", TempK: 280.3}
+	got := inConditions.String()
+
+	if !cmp.Equal(want, got) {
+		t.Fatal(cmp.Diff(want, got))
+	}
+}
+
+func TestConditionsStringFahrenheit_CorrectlyFormatsConditions(t *testing.T) {
+	want := "Current wether for Belgrade: Clear 44.2ºF"
+	inConditions := weather.Conditions{City: "Belgrade", Feel: "Clear", TempK: 280.3}
+	got := inConditions.StringFahrenheit()
+
+	if !cmp.Equal(want, got) {
+		t.Fatal(cmp.Diff(want, got))
+	}
+}
+
+func TestConditionsStringCelsius_CorrectlyFormatsConditions(t *testing.T) {
+	want := "Current wether for Belgrade: Clear 6.8ºC"
+	inConditions := weather.Conditions{City: "Belgrade", Feel: "Clear", TempK: 280.3}
+	got := inConditions.StringCelsius()
+
 	if !cmp.Equal(want, got) {
 		t.Fatal(cmp.Diff(want, got))
 	}
