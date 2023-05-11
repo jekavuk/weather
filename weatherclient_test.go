@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/jekvuk/weather"
+	"github.com/jekavuk/weather"
 
 	"github.com/google/go-cmp/cmp"
 )
