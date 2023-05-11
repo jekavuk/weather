@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/jekvuk/weather"
+	"github.com/jekavuk/weather"
 )
 
 // options

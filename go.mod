@@ -1,4 +1,4 @@
-module github.com/jekvuk/weather
+module github.com/jekavuk/weather
 
 go 1.18
 
