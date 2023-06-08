@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -98,18 +97,20 @@ func GetAPIKey() (string, error) {
 	return key, nil
 }
 
-func Main() {
+func Main() int {
 	var temperatureScale = flag.String("scale", "", "port number")
 	flag.Parse()
 
 	locationArgs := flag.Args()
 	if len(locationArgs) < 1 {
-		log.Fatal("please provide valid location")
+		fmt.Fprintln(os.Stderr, "please provide valid location")
+		return 1
 	}
 
 	key, err := GetAPIKey()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, err)
+		return 1
 	}
 
 	weClient := NewClient(key)
@@ -117,7 +118,8 @@ func Main() {
 	location := strings.Join(locationArgs, " ")
 	conditions, err := weClient.GetWeather(location)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, err)
+		return 1
 	}
 	switch *temperatureScale {
 	default:
@@ -125,6 +127,8 @@ func Main() {
 	case "fahrenheit":
 		fmt.Println(conditions.StringFahrenheit())
 	}
+
+	return 0
 }
 
 func (c Conditions) String() string {

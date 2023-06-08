@@ -1,9 +1,11 @@
 package main
 
 import (
+	"os"
+
 	"github.com/jekavuk/weather"
 )
 
 func main() {
-	weather.Main()
+	os.Exit(weather.Main())
 }

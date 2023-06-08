@@ -8,6 +8,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/rogpeppe/go-internal/testscript"
+
 	"github.com/jekavuk/weather"
 
 	"github.com/google/go-cmp/cmp"
@@ -159,8 +161,19 @@ func TestConditionsStringCelsius_CorrectlyFormatsConditions(t *testing.T) {
 	}
 }
 
-func TestMain_TestMain(t *testing.T) {
-	os.Args[1] = "Belgade"
-	fmt.Println(os.Args)
-	t.Fail()
+func TestMain(m *testing.M) {
+	os.Exit(testscript.RunMain(m, map[string]func() int{"weather": weather.Main}))
+}
+
+func TestScript(t *testing.T) {
+	testscript.Run(t, testscript.Params{
+		Dir: "testdata/script",
+	})
+}
+
+func ExampleWeatherClient_FormatLocation() {
+	wc := weather.NewClient("dummy")
+	fmt.Println(wc.FormatLocation("New York"))
+	// Output:
+	// New%20York
 }

@@ -4,7 +4,7 @@
 # Installation
 If you wish install it using go get:
 ```
-go get github.com/jekavuk/weather
+go install github.com/jekavuk/weather/cmd/weather@latest
 ```
 
 # Usage
