@@ -2,14 +2,23 @@ package weather
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 )
 
 const APIKeyName = "OPEN_WEATHER_MAP_API_KEY"
+
+type Conditions struct {
+	City  string
+	Feel  string
+	TempK float64
+}
 
 type WeatherClient struct {
 	APIKey, BaseURL string
@@ -87,4 +96,53 @@ func GetAPIKey() (string, error) {
 		return "", fmt.Errorf("please set env var %s to a value of your API key", APIKeyName)
 	}
 	return key, nil
+}
+
+func Main() {
+	var temperatureScale = flag.String("scale", "", "port number")
+	flag.Parse()
+
+	locationArgs := flag.Args()
+	if len(locationArgs) < 1 {
+		log.Fatal("please provide valid location")
+	}
+
+	key, err := GetAPIKey()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	weClient := NewClient(key)
+
+	location := strings.Join(locationArgs, " ")
+	conditions, err := weClient.GetWeather(location)
+	if err != nil {
+		log.Fatal(err)
+	}
+	switch *temperatureScale {
+	default:
+		fmt.Println(conditions.StringCelsius())
+	case "fahrenheit":
+		fmt.Println(conditions.StringFahrenheit())
+	}
+}
+
+func (c Conditions) String() string {
+	return fmt.Sprintf("Current wether for %s: %s %.1fK", c.City, c.Feel, c.TempK)
+}
+
+func (c Conditions) TempFahrenheit() float64 {
+	return 1.8*c.TempCelsius() + 32
+}
+
+func (c Conditions) StringFahrenheit() string {
+	return fmt.Sprintf("Current wether for %s: %s %.1fºF", c.City, c.Feel, c.TempFahrenheit())
+}
+
+func (c Conditions) TempCelsius() float64 {
+	return c.TempK - 273.5
+}
+
+func (c Conditions) StringCelsius() string {
+	return fmt.Sprintf("Current wether for %s: %s %.1fºC", c.City, c.Feel, c.TempCelsius())
 }

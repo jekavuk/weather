@@ -158,3 +158,9 @@ func TestConditionsStringCelsius_CorrectlyFormatsConditions(t *testing.T) {
 		t.Fatal(cmp.Diff(want, got))
 	}
 }
+
+func TestMain_TestMain(t *testing.T) {
+	os.Args[1] = "Belgade"
+	fmt.Println(os.Args)
+	t.Fail()
+}
